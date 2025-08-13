@@ -1,0 +1,17 @@
+# Backend
+fastapi
+uvicorn[standard]
+python-multipart
+
+# Frontend
+streamlit
+requests
+
+# Core ML & Data (with stable minimum versions)
+pandas
+numpy
+torch>=2.1.0
+transformers>=4.41.0
+accelerate>=0.29.0
+statsmodels
+scikit-learn

@@ -1,0 +1,30 @@
+# Python Virtual Environment
+venv/
+
+# Python cache and compiled files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Python distribution and packaging
+*.egg-info/
+dist/
+build/
+*.egg
+
+# IDE-specific files (VS Code)
+.vscode/
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+.history/
+
+# Streamlit-specific files
+.streamlit/
+
+# Operating System files
+.DS_Store
+Thumbs.db
+._*
