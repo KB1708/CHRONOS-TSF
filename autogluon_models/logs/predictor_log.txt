@@ -428,3 +428,172 @@ data with frequency 'IRREG' has been resampled to frequency 'D'.
 Additional data provided, testing on additional data. Resulting leaderboard will be sorted according to test score (`score_test`).
 data with frequency 'IRREG' has been resampled to frequency 'D'.
 data with frequency 'IRREG' has been resampled to frequency 'D'.
+Beginning AutoGluon training...
+AutoGluon will save models to 'D:\goML\Chronos_TSF\autogluon_models'
+=================== System Info ===================
+AutoGluon Version:  1.4.0
+Python Version:     3.11.9
+Operating System:   Windows
+Platform Machine:   AMD64
+Platform Version:   10.0.26100
+CPU Count:          16
+GPU Count:          0
+Memory Avail:       5.87 GB / 15.21 GB (38.6%)
+Disk Space Avail:   224.30 GB / 476.50 GB (47.1%)
+===================================================
+
+Fitting with arguments:
+{'enable_ensemble': False,
+ 'eval_metric': MASE,
+ 'freq': 'D',
+ 'hyperparameters': {'ARIMA': {}, 'Chronos': {}},
+ 'known_covariates_names': [],
+ 'num_val_windows': 1,
+ 'prediction_length': 20,
+ 'quantile_levels': [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9],
+ 'random_seed': 123,
+ 'refit_every_n_windows': 1,
+ 'refit_full': False,
+ 'skip_model_selection': False,
+ 'target': 'Close',
+ 'verbosity': 2}
+
+train_data with frequency 'IRREG' has been resampled to frequency 'D'.
+Provided train_data has 57 rows (NaN fraction=29.8%), 1 time series. Median time series length is 57 (min=57, max=57). 
+
+Provided data contains following columns:
+	target: 'Close'
+
+AutoGluon will gauge predictive performance using evaluation metric: 'MASE'
+	This metric's sign has been flipped to adhere to being higher_is_better. The metric score can be multiplied by -1 to get the metric value.
+===================================================
+
+Starting training. Start time is 2025-08-15 13:19:38
+Models that will be trained: ['Chronos[autogluon__chronos-bolt-small]', 'ARIMA']
+Training timeseries model Chronos[autogluon__chronos-bolt-small]. 
+	-0.6683       = Validation score (-MASE)
+	3.94    s     = Training runtime
+	1.71    s     = Validation (prediction) runtime
+Training timeseries model ARIMA. 
+	-0.9591       = Validation score (-MASE)
+	0.02    s     = Training runtime
+	7.16    s     = Validation (prediction) runtime
+Training complete. Models trained: ['Chronos[autogluon__chronos-bolt-small]', 'ARIMA']
+Total runtime: 12.85 s
+Best model: Chronos[autogluon__chronos-bolt-small]
+Best model score: -0.6683
+data with frequency 'IRREG' has been resampled to frequency 'D'.
+data with frequency 'IRREG' has been resampled to frequency 'D'.
+Warning: path already exists! This predictor may overwrite an existing predictor! path="./autogluon_models"
+Beginning AutoGluon training...
+Beginning AutoGluon training...
+AutoGluon will save models to 'D:\goML\Chronos_TSF\autogluon_models'
+AutoGluon will save models to 'D:\goML\Chronos_TSF\autogluon_models'
+=================== System Info ===================
+AutoGluon Version:  1.4.0
+Python Version:     3.11.9
+Operating System:   Windows
+Platform Machine:   AMD64
+Platform Version:   10.0.26100
+CPU Count:          16
+GPU Count:          0
+Memory Avail:       5.25 GB / 15.21 GB (34.5%)
+Disk Space Avail:   224.30 GB / 476.50 GB (47.1%)
+===================================================
+=================== System Info ===================
+AutoGluon Version:  1.4.0
+Python Version:     3.11.9
+Operating System:   Windows
+Platform Machine:   AMD64
+Platform Version:   10.0.26100
+CPU Count:          16
+GPU Count:          0
+Memory Avail:       5.25 GB / 15.21 GB (34.5%)
+Disk Space Avail:   224.30 GB / 476.50 GB (47.1%)
+===================================================
+
+Fitting with arguments:
+
+Fitting with arguments:
+{'enable_ensemble': False,
+ 'eval_metric': MASE,
+ 'freq': 'D',
+ 'hyperparameters': {'ARIMA': {}, 'Chronos': {}},
+ 'known_covariates_names': [],
+ 'num_val_windows': 1,
+ 'prediction_length': 20,
+ 'quantile_levels': [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9],
+ 'random_seed': 123,
+ 'refit_every_n_windows': 1,
+ 'refit_full': False,
+ 'skip_model_selection': False,
+ 'target': 'Close',
+ 'verbosity': 2}
+
+{'enable_ensemble': False,
+ 'eval_metric': MASE,
+ 'freq': 'D',
+ 'hyperparameters': {'ARIMA': {}, 'Chronos': {}},
+ 'known_covariates_names': [],
+ 'num_val_windows': 1,
+ 'prediction_length': 20,
+ 'quantile_levels': [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9],
+ 'random_seed': 123,
+ 'refit_every_n_windows': 1,
+ 'refit_full': False,
+ 'skip_model_selection': False,
+ 'target': 'Close',
+ 'verbosity': 2}
+
+train_data with frequency 'IRREG' has been resampled to frequency 'D'.
+train_data with frequency 'IRREG' has been resampled to frequency 'D'.
+Provided train_data has 57 rows (NaN fraction=29.8%), 1 time series. Median time series length is 57 (min=57, max=57). 
+Provided train_data has 57 rows (NaN fraction=29.8%), 1 time series. Median time series length is 57 (min=57, max=57). 
+
+Provided data contains following columns:
+
+Provided data contains following columns:
+	target: 'Close'
+	target: 'Close'
+
+AutoGluon will gauge predictive performance using evaluation metric: 'MASE'
+
+AutoGluon will gauge predictive performance using evaluation metric: 'MASE'
+	This metric's sign has been flipped to adhere to being higher_is_better. The metric score can be multiplied by -1 to get the metric value.
+	This metric's sign has been flipped to adhere to being higher_is_better. The metric score can be multiplied by -1 to get the metric value.
+===================================================
+===================================================
+
+Starting training. Start time is 2025-08-15 13:22:15
+
+Starting training. Start time is 2025-08-15 13:22:15
+Models that will be trained: ['Chronos[autogluon__chronos-bolt-small]', 'ARIMA']
+Models that will be trained: ['Chronos[autogluon__chronos-bolt-small]', 'ARIMA']
+Training timeseries model Chronos[autogluon__chronos-bolt-small]. 
+Training timeseries model Chronos[autogluon__chronos-bolt-small]. 
+	-1.0269       = Validation score (-MASE)
+	-1.0269       = Validation score (-MASE)
+	0.02    s     = Training runtime
+	0.02    s     = Training runtime
+	1.52    s     = Validation (prediction) runtime
+	1.52    s     = Validation (prediction) runtime
+Training timeseries model ARIMA. 
+Training timeseries model ARIMA. 
+	-1.3799       = Validation score (-MASE)
+	-1.3799       = Validation score (-MASE)
+	0.03    s     = Training runtime
+	0.03    s     = Training runtime
+	7.10    s     = Validation (prediction) runtime
+	7.10    s     = Validation (prediction) runtime
+Training complete. Models trained: ['Chronos[autogluon__chronos-bolt-small]', 'ARIMA']
+Training complete. Models trained: ['Chronos[autogluon__chronos-bolt-small]', 'ARIMA']
+Total runtime: 8.69 s
+Total runtime: 8.69 s
+Best model: Chronos[autogluon__chronos-bolt-small]
+Best model: Chronos[autogluon__chronos-bolt-small]
+Best model score: -1.0269
+Best model score: -1.0269
+data with frequency 'IRREG' has been resampled to frequency 'D'.
+data with frequency 'IRREG' has been resampled to frequency 'D'.
+data with frequency 'IRREG' has been resampled to frequency 'D'.
+data with frequency 'IRREG' has been resampled to frequency 'D'.
