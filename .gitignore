@@ -28,3 +28,6 @@ build/
 .DS_Store
 Thumbs.db
 ._*
+
+# Ignore auto-generated AutoGluon models
+autogluon_models/
