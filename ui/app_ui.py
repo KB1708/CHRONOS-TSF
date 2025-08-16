@@ -22,9 +22,7 @@ def call_forecast_api(df, date_col, value_col, horizon):
     csv_buffer = df.to_csv(index=False).encode('utf-8')
     
     files = {'file': ('data.csv', csv_buffer, 'text/csv')}
-    # --- FIX: Add forecast_horizon to the data payload ---
     data = {'date_col': date_col, 'value_col': value_col, 'forecast_horizon': horizon}
-    # --- END OF FIX ---
     
     try:
         response = requests.post(API_URL, files=files, data=data, timeout=600)
@@ -62,7 +60,7 @@ uploaded_file = st.sidebar.file_uploader(
     help="Your CSV should have a date column and a value column."
 )
 
-# --- FIX: Add Forecast Horizon slider ---
+# Forecast Horizon slider
 forecast_horizon = st.sidebar.slider(
     "Forecast Horizon (Days)", 
     min_value=10, 
@@ -71,7 +69,6 @@ forecast_horizon = st.sidebar.slider(
     step=5,
     help="How many days into the future do you want to forecast?"
 )
-# --- END OF FIX ---
 
 
 if uploaded_file is not None:
@@ -102,9 +99,7 @@ if st.session_state['df'] is not None:
     if st.button("Generate Forecast", type="primary"):
         with st.spinner('Backend is processing... This may take a few minutes.'):
             start_time = time.time()
-            # --- FIX: Pass the forecast_horizon from the slider ---
             st.session_state['api_response'] = call_forecast_api(df, date_col, value_col, forecast_horizon)
-            # --- END OF FIX ---
             end_time = time.time()
             st.info(f"Processing took {end_time - start_time:.2f} seconds.")
 
@@ -136,10 +131,40 @@ if st.session_state['api_response']:
     st.subheader("📈 Forecast Visualization")
     fig = go.Figure()
     fig.add_trace(go.Scatter(x=response_data['historical_dates'], y=response_data['historical_values'], mode='lines', name='Historical Data', line=dict(color='royalblue')))
-    fig.add_trace(go.Scatter(x=response_data['forecast_dates'], y=response_data['actual_values'], mode='lines', name='Actual Values (Holdout)', line=dict(color='black', width=3)))
-    fig.add_trace(go.Scatter(x=response_data['forecast_dates'], y=response_data['arima_forecast']['forecast_values'], mode='lines', name='ARIMA Forecast', line=dict(color='orange', dash='dot')))
-    fig.add_trace(go.Scatter(x=response_data['forecast_dates'], y=response_data['chronos_forecast']['forecast_values'], mode='lines', name='Chronos Forecast', line=dict(color='lightgreen', width=2, dash='dash')))
-    fig.add_trace(go.Scatter(x=response_data['forecast_dates'], y=response_data['ets_forecast']['forecast_values'], mode='lines', name='ETS Forecast', line=dict(color='mediumpurple', dash='longdash')))
+    
+    # --- VISUAL IMPROVEMENT 1: De-emphasize the actual values line ---
+    fig.add_trace(go.Scatter(
+        x=response_data['forecast_dates'], 
+        y=response_data['actual_values'], 
+        mode='lines', 
+        name='Actual Values (Holdout)', 
+        line=dict(color='grey', width=2, dash='dash') # Lighter, dashed line
+    ))
+    # --- END OF IMPROVEMENT ---
+    
+    # --- VISUAL IMPROVEMENT 2: Emphasize the forecast lines ---
+    fig.add_trace(go.Scatter(
+        x=response_data['forecast_dates'], 
+        y=response_data['arima_forecast']['forecast_values'], 
+        mode='lines', 
+        name='ARIMA Forecast', 
+        line=dict(color='orange', width=2.5) # Solid, thicker line
+    ))
+    fig.add_trace(go.Scatter(
+        x=response_data['forecast_dates'], 
+        y=response_data['chronos_forecast']['forecast_values'], 
+        mode='lines', 
+        name='Chronos Forecast', 
+        line=dict(color='lightgreen', width=2.5) # Solid, thicker line
+    ))
+    fig.add_trace(go.Scatter(
+        x=response_data['forecast_dates'], 
+        y=response_data['ets_forecast']['forecast_values'], 
+        mode='lines', 
+        name='ETS Forecast', 
+        line=dict(color='cyan', width=2.5) # Solid, thicker line
+    ))
+    # --- END OF IMPROVEMENT ---
 
     fig.update_layout(title="Model Forecasts vs. Historical Data", xaxis_title="Date", yaxis_title="Value", legend_title="Series", height=600)
     st.plotly_chart(fig, use_container_width=True)
