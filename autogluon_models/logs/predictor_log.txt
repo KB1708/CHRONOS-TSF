@@ -1,2 +1,56 @@
 Beginning AutoGluon training...
 AutoGluon will save models to 'D:\goML\Chronos_TSF\autogluon_models'
+=================== System Info ===================
+AutoGluon Version:  1.4.0
+Python Version:     3.11.9
+Operating System:   Windows
+Platform Machine:   AMD64
+Platform Version:   10.0.26100
+CPU Count:          16
+GPU Count:          0
+Memory Avail:       4.58 GB / 15.21 GB (30.1%)
+Disk Space Avail:   224.29 GB / 476.50 GB (47.1%)
+===================================================
+
+Fitting with arguments:
+{'enable_ensemble': False,
+ 'eval_metric': MASE,
+ 'freq': 'D',
+ 'hyperparameters': {'ARIMA': {}, 'Chronos': {}},
+ 'known_covariates_names': [],
+ 'num_val_windows': 1,
+ 'prediction_length': 143,
+ 'quantile_levels': [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9],
+ 'random_seed': 123,
+ 'refit_every_n_windows': 1,
+ 'refit_full': False,
+ 'skip_model_selection': False,
+ 'target': 'Close',
+ 'verbosity': 2}
+
+train_data with frequency 'MS' has been resampled to frequency 'D'.
+Provided train_data has 10106 rows (NaN fraction=96.7%), 1 time series. Median time series length is 10106 (min=10106, max=10106). 
+
+Provided data contains following columns:
+	target: 'Close'
+
+AutoGluon will gauge predictive performance using evaluation metric: 'MASE'
+	This metric's sign has been flipped to adhere to being higher_is_better. The metric score can be multiplied by -1 to get the metric value.
+===================================================
+
+Starting training. Start time is 2025-08-16 12:20:39
+Models that will be trained: ['Chronos[autogluon__chronos-bolt-small]', 'ARIMA']
+Training timeseries model Chronos[autogluon__chronos-bolt-small]. 
+	-14.9093      = Validation score (-MASE)
+	3.90    s     = Training runtime
+	2.38    s     = Validation (prediction) runtime
+Training timeseries model ARIMA. 
+	-13.3000      = Validation score (-MASE)
+	0.03    s     = Training runtime
+	5.70    s     = Validation (prediction) runtime
+Training complete. Models trained: ['Chronos[autogluon__chronos-bolt-small]', 'ARIMA']
+Total runtime: 12.04 s
+Best model: ARIMA
+Best model score: -13.3000
+data with frequency 'MS' has been resampled to frequency 'D'.
+data with frequency 'MS' has been resampled to frequency 'D'.
