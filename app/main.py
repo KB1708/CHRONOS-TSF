@@ -8,7 +8,7 @@ from .core.schemas import ForecastResponse
 # Initialize the FastAPI app
 app = FastAPI(
     title="Time Series Forecasting API",
-    description="An API to compare Chronos and ARIMA forecasting models.",
+    description="An API to compare Chronos, ARIMA, and ETS forecasting models.",
     version="1.0.0"
 )
 
@@ -29,10 +29,14 @@ def read_root():
 async def create_forecast(
     file: UploadFile = File(...),
     date_col: str = Form(...),
-    value_col: str = Form(...)
+    value_col: str = Form(...),
+    # --- FIX: Accept forecast_horizon from the frontend ---
+    forecast_horizon: int = Form(...)
+    # --- END OF FIX ---
 ):
     """
-    This endpoint receives a CSV file and column names, runs models, and returns results.
+    This endpoint receives a CSV file, column names, and a forecast horizon,
+    runs models, and returns the results.
     """
     if not file.filename.endswith('.csv'):
         raise HTTPException(status_code=400, detail="Invalid file type. Please upload a CSV file.")
@@ -41,12 +45,17 @@ async def create_forecast(
         contents = await file.read()
         df = pd.read_csv(io.BytesIO(contents))
         
-        # Validate that the provided column names exist in the dataframe
         if date_col not in df.columns or value_col not in df.columns:
             raise HTTPException(status_code=400, detail=f"Provided column names not found. Ensure '{date_col}' and '{value_col}' are in the CSV.")
 
-        # Pass the dataframe and the user-selected column names to the logic
-        results = generate_all_forecasts_and_metrics(df, date_col=date_col, target_col=value_col)
+        # --- FIX: Pass the horizon to the backend logic ---
+        results = generate_all_forecasts_and_metrics(
+            df, 
+            date_col=date_col, 
+            target_col=value_col, 
+            forecast_horizon=forecast_horizon
+        )
+        # --- END OF FIX ---
         
         return results
 
@@ -54,4 +63,3 @@ async def create_forecast(
         raise HTTPException(status_code=400, detail=str(ve))
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"An error occurred: {str(e)}")
-

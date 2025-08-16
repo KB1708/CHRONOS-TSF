@@ -17,12 +17,14 @@ API_URL = "http://127.0.0.1:8000/forecast/"
 
 # --- Helper Functions ---
 
-def call_forecast_api(df, date_col, value_col):
-    """Sends a dataframe and column names to the backend API."""
+def call_forecast_api(df, date_col, value_col, horizon):
+    """Sends a dataframe, column names, and horizon to the backend API."""
     csv_buffer = df.to_csv(index=False).encode('utf-8')
     
     files = {'file': ('data.csv', csv_buffer, 'text/csv')}
-    data = {'date_col': date_col, 'value_col': value_col}
+    # --- FIX: Add forecast_horizon to the data payload ---
+    data = {'date_col': date_col, 'value_col': value_col, 'forecast_horizon': horizon}
+    # --- END OF FIX ---
     
     try:
         response = requests.post(API_URL, files=files, data=data, timeout=600)
@@ -60,6 +62,18 @@ uploaded_file = st.sidebar.file_uploader(
     help="Your CSV should have a date column and a value column."
 )
 
+# --- FIX: Add Forecast Horizon slider ---
+forecast_horizon = st.sidebar.slider(
+    "Forecast Horizon (Days)", 
+    min_value=10, 
+    max_value=100, 
+    value=30, 
+    step=5,
+    help="How many days into the future do you want to forecast?"
+)
+# --- END OF FIX ---
+
+
 if uploaded_file is not None:
     try:
         st.session_state['df'] = pd.read_csv(uploaded_file)
@@ -88,7 +102,9 @@ if st.session_state['df'] is not None:
     if st.button("Generate Forecast", type="primary"):
         with st.spinner('Backend is processing... This may take a few minutes.'):
             start_time = time.time()
-            st.session_state['api_response'] = call_forecast_api(df, date_col, value_col)
+            # --- FIX: Pass the forecast_horizon from the slider ---
+            st.session_state['api_response'] = call_forecast_api(df, date_col, value_col, forecast_horizon)
+            # --- END OF FIX ---
             end_time = time.time()
             st.info(f"Processing took {end_time - start_time:.2f} seconds.")
 
@@ -98,7 +114,6 @@ if st.session_state['api_response']:
     st.subheader("📊 Performance Metrics")
     st.markdown("Lower is better for all error metrics.")
 
-    # --- FIX: Add a third column for ETS metrics ---
     c1, c2, c3 = st.columns(3)
     with c1:
         st.subheader("Chronos (GenAI)")
@@ -117,7 +132,6 @@ if st.session_state['api_response']:
         ets_metrics = response_data['ets_forecast']['metrics']
         st.metric(label="MAE", value=f"{ets_metrics['mae']:.2f}")
         st.metric(label="RMSE", value=f"{ets_metrics['rmse']:.2f}")
-    # --- END OF FIX ---
         
     st.subheader("📈 Forecast Visualization")
     fig = go.Figure()
@@ -125,10 +139,7 @@ if st.session_state['api_response']:
     fig.add_trace(go.Scatter(x=response_data['forecast_dates'], y=response_data['actual_values'], mode='lines', name='Actual Values (Holdout)', line=dict(color='black', width=3)))
     fig.add_trace(go.Scatter(x=response_data['forecast_dates'], y=response_data['arima_forecast']['forecast_values'], mode='lines', name='ARIMA Forecast', line=dict(color='orange', dash='dot')))
     fig.add_trace(go.Scatter(x=response_data['forecast_dates'], y=response_data['chronos_forecast']['forecast_values'], mode='lines', name='Chronos Forecast', line=dict(color='lightgreen', width=2, dash='dash')))
-    
-    # --- FIX: Add the ETS forecast to the plot ---
     fig.add_trace(go.Scatter(x=response_data['forecast_dates'], y=response_data['ets_forecast']['forecast_values'], mode='lines', name='ETS Forecast', line=dict(color='mediumpurple', dash='longdash')))
-    # --- END OF FIX ---
 
     fig.update_layout(title="Model Forecasts vs. Historical Data", xaxis_title="Date", yaxis_title="Value", legend_title="Series", height=600)
     st.plotly_chart(fig, use_container_width=True)
