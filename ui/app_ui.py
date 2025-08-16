@@ -81,8 +81,8 @@ if 'df' not in st.session_state:
 
 # Sample data selection
 sample_data_options = {
-    "NIFTY 50 Daily Prices": "data/nifty_50_daily.csv",
-    "Reliance Industries Daily Prices": "data/reliance_daily.csv"
+    "S&P 500 Prices": "data/sp500.csv",
+    "US Monthly Beer prod Prices": "data/monthly-beer-production-in-austr.csv"
 }
 selected_sample = st.sidebar.selectbox("Choose a sample dataset:", options=list(sample_data_options.keys()))
 
