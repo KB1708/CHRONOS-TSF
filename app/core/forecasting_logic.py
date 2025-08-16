@@ -3,6 +3,7 @@ import logging
 from autogluon.timeseries import TimeSeriesDataFrame, TimeSeriesPredictor
 from sklearn.metrics import mean_absolute_error, mean_squared_error
 import numpy as np
+import shutil
 
 # Set up basic logging
 logging.basicConfig(level=logging.INFO)
@@ -15,21 +16,35 @@ def calculate_manual_metrics(true_values, predicted_values):
     return {"mae": mae, "rmse": rmse}
 
 
-def generate_all_forecasts_and_metrics(df: pd.DataFrame, forecast_horizon: int = 20):
-    """
-    The main orchestration function using AutoGluon.
-    It takes a dataframe, runs Chronos and ARIMA, and returns all results.
-    """
-    df["item_id"] = "stock_price"
-    ts_df = TimeSeriesDataFrame.from_data_frame(
-        df, id_column="item_id", timestamp_column="Date"
+def generate_all_forecasts_and_metrics(df: pd.DataFrame, forecast_horizon: int = None):
+    df["item_id"] = "series_1"
+    
+    # Split data: 70% for training, 30% for testing
+    split_index = int(len(df) * 0.7)
+    train_df = df.iloc[:split_index]
+    test_df = df.iloc[split_index:]
+    
+    prediction_length = len(test_df)
+
+    train_ts_df = TimeSeriesDataFrame.from_data_frame(
+        train_df, id_column="item_id", timestamp_column="Date"
     )
     
     predictor_path = "./autogluon_models"
+    
+    # --- THIS IS THE FIX ---
+    # 2. Delete the old model directory before starting a new run.
+    # This ensures every forecast is clean and prevents caching errors.
+    try:
+        shutil.rmtree(predictor_path)
+    except FileNotFoundError:
+        pass  # Ignore if the folder doesn't exist on the first run
+    # --- END OF FIX ---
+        
     hyperparameters = {"Chronos": {}, "ARIMA": {}}
 
     predictor = TimeSeriesPredictor(
-        prediction_length=forecast_horizon,
+        prediction_length=prediction_length,
         path=predictor_path,
         target="Close",
         eval_metric="MASE",
@@ -37,7 +52,7 @@ def generate_all_forecasts_and_metrics(df: pd.DataFrame, forecast_horizon: int =
     )
 
     predictor.fit(
-        ts_df, 
+        train_ts_df, 
         hyperparameters=hyperparameters,
         enable_ensemble=False
     )
@@ -47,38 +62,29 @@ def generate_all_forecasts_and_metrics(df: pd.DataFrame, forecast_horizon: int =
     except StopIteration:
         chronos_model_name = "Chronos"
 
-    chronos_predictions = predictor.predict(ts_df, model=chronos_model_name)
-    arima_predictions = predictor.predict(ts_df, model="ARIMA")
-    
-    # --- FINAL FIXES START HERE ---
-    
-    # 1. Correctly extract forecast dates and values
-    forecast_dates_ts = chronos_predictions.index.get_level_values('timestamp')
+    # Make separate, explicit predict calls for each model
+    chronos_predictions = predictor.predict(train_ts_df, model=chronos_model_name)
+    arima_predictions = predictor.predict(train_ts_df, model="ARIMA")
+
     chronos_preds = chronos_predictions["mean"].values
     arima_preds = arima_predictions["mean"].values
-
-    # 2. Get the true actual values for the forecast period to calculate metrics
-    true_values = df.iloc[-forecast_horizon:]["Close"].values
     
-    # 3. Calculate metrics manually for accuracy
+    true_values = test_df["Close"].values
     chronos_metrics = calculate_manual_metrics(true_values, chronos_preds)
     arima_metrics = calculate_manual_metrics(true_values, arima_preds)
     
-    # 4. Correctly extract historical data
-    train_df = df.iloc[:-forecast_horizon]
-
     response = {
         "historical_dates": pd.to_datetime(train_df['Date']).dt.strftime('%Y-%m-%d').tolist(),
         "historical_values": train_df['Close'].tolist(),
-        "forecast_dates": pd.to_datetime(forecast_dates_ts).strftime('%Y-%m-%d').tolist(), # <-- FIX 1
+        "forecast_dates": pd.to_datetime(test_df['Date']).dt.strftime('%Y-%m-%d').tolist(),
+        "actual_values": test_df['Close'].tolist(),
         "chronos_forecast": {
             "forecast_values": chronos_preds.tolist(),
-            "metrics": chronos_metrics  # <-- FIX 2
+            "metrics": chronos_metrics
         },
         "arima_forecast": {
             "forecast_values": arima_preds.tolist(),
-            "metrics": arima_metrics  # <-- FIX 2
+            "metrics": arima_metrics
         }
     }
-    
     return response

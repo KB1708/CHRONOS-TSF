@@ -23,5 +23,6 @@ class ForecastResponse(BaseModel):
     historical_dates: List[Any]
     historical_values: List[float]
     forecast_dates: List[Any]
+    actual_values: List[float]
     chronos_forecast: ModelForecast
     arima_forecast: ModelForecast
