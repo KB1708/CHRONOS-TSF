@@ -3,6 +3,7 @@ import pandas as pd
 import requests
 import plotly.graph_objects as go
 import plotly.express as px
+from plotly.subplots import make_subplots
 import time
 import numpy as np
 
@@ -62,7 +63,7 @@ uploaded_file = st.sidebar.file_uploader(
     help="Your CSV should have a date column and a value column."
 )
 
-# --- FIX: Change slider to be month-wise ---
+# Forecast Horizon slider
 forecast_horizon = st.sidebar.slider(
     "Forecast Horizon (Months)", 
     min_value=3, 
@@ -71,7 +72,6 @@ forecast_horizon = st.sidebar.slider(
     step=3,
     help="How many months into the future do you want to forecast?"
 )
-# --- END OF FIX ---
 
 
 if uploaded_file is not None:
@@ -155,67 +155,63 @@ if st.session_state['api_response']:
 
     # --- SECTION 3: Forecast Visualization ---
     st.subheader("📈 Forecast Visualization")
-    fig = go.Figure()
-
-    fig.add_trace(go.Scatter(
-        x=response_data['historical_dates'], 
-        y=response_data['historical_values'], 
-        mode='lines', 
-        name='Historical Data',
-        line=dict(color='royalblue', width=2)
-    ))
     
-    fig.add_trace(go.Scatter(
-        x=response_data['forecast_dates'], 
-        y=response_data['actual_values'], 
-        mode='lines', 
-        name='Actual Values (Holdout)',
-        line=dict(color='grey', width=2, dash='dash')
-    ))
-    
-    fig.add_trace(go.Scatter(
-        x=response_data['forecast_dates'], 
-        y=response_data['arima_forecast']['forecast_values'],
-        mode='lines', 
-        name='ARIMA Forecast', 
-        line=dict(color='orange', width=2.5)
-    ))
-    
-    fig.add_trace(go.Scatter(
-        x=response_data['forecast_dates'], 
-        y=response_data['chronos_forecast']['forecast_values'],
-        mode='lines', 
-        name='Chronos Forecast', 
-        line=dict(color='firebrick', width=2.5)
-    ))
-    
-    fig.add_trace(go.Scatter(
-        x=response_data['forecast_dates'], 
-        y=response_data['ets_forecast']['forecast_values'],
-        mode='lines', 
-        name='ETS Forecast', 
-        line=dict(color='cyan', width=2.5)
-    ))
+    # --- Main Combined Plot ---
+    fig_main = go.Figure()
+    fig_main.add_trace(go.Scatter(x=response_data['historical_dates'], y=response_data['historical_values'], mode='lines', name='Historical Data', line=dict(color='royalblue', width=2)))
+    fig_main.add_trace(go.Scatter(x=response_data['forecast_dates'], y=response_data['actual_values'], mode='lines', name='Actual Values (Holdout)', line=dict(color='grey', width=2, dash='dash')))
+    fig_main.add_trace(go.Scatter(x=response_data['forecast_dates'], y=response_data['arima_forecast']['forecast_values'], mode='lines', name='ARIMA Forecast', line=dict(color='orange', width=2.5)))
+    fig_main.add_trace(go.Scatter(x=response_data['forecast_dates'], y=response_data['chronos_forecast']['forecast_values'], mode='lines', name='Chronos Forecast', line=dict(color='firebrick', width=2.5)))
+    fig_main.add_trace(go.Scatter(x=response_data['forecast_dates'], y=response_data['ets_forecast']['forecast_values'], mode='lines', name='ETS Forecast', line=dict(color='cyan', width=2.5)))
     
     split_date = response_data['historical_dates'][-1]
-    fig.add_shape(
-        type="line", x0=split_date, y0=0, x1=split_date, y1=1,
-        yref="paper", line=dict(color="red", width=2, dash="dash")
-    )
-    fig.add_annotation(
-        x=split_date, y=1, yref="paper",
-        text="Train/Test Split", showarrow=False, yshift=10
+    fig_main.add_shape(type="line", x0=split_date, y0=0, x1=split_date, y1=1, yref="paper", line=dict(color="red", width=2, dash="dash"))
+    fig_main.add_annotation(x=split_date, y=1, yref="paper", text="Train/Test Split", showarrow=False, yshift=10)
+
+    fig_main.update_layout(title="All Models vs. Actual Data", xaxis_title="Date", yaxis_title="Value", height=500, legend_title="Series", template="plotly_dark")
+    st.plotly_chart(fig_main, use_container_width=True)
+
+    # --- NEW: Individual Comparison Subplots ---
+    st.subheader("Individual Model Performance")
+    
+    fig_subplots = make_subplots(
+        rows=1, cols=3, 
+        shared_yaxes=True, 
+        subplot_titles=("Chronos vs. Actual", "ARIMA vs. Actual", "ETS vs. Actual")
     )
 
-    fig.update_layout(
-        title="Forecast vs. Actual Holdout Data", 
-        xaxis_title="Date", 
-        yaxis_title="Value", 
-        height=600, 
-        legend_title="Series",
-        template="plotly_dark"
-    )
-    st.plotly_chart(fig, use_container_width=True)
+    models_to_plot = [
+        ('Chronos', response_data['chronos_forecast']['forecast_values'], 'firebrick'),
+        ('ARIMA', response_data['arima_forecast']['forecast_values'], 'orange'),
+        ('ETS', response_data['ets_forecast']['forecast_values'], 'cyan')
+    ]
+
+    for i, (name, forecast, color) in enumerate(models_to_plot):
+        col = i + 1
+        # Add recent history for context
+        fig_subplots.add_trace(go.Scatter(
+            x=response_data['historical_dates'][-30:], 
+            y=response_data['historical_values'][-30:],
+            mode='lines', name='History', line=dict(color='royalblue'), showlegend=(i==0)
+        ), row=1, col=col)
+        
+        # Add actual values
+        fig_subplots.add_trace(go.Scatter(
+            x=response_data['forecast_dates'], 
+            y=response_data['actual_values'],
+            mode='lines', name='Actual', line=dict(color='grey', dash='dash'), showlegend=(i==0)
+        ), row=1, col=col)
+        
+        # Add the specific model's forecast
+        fig_subplots.add_trace(go.Scatter(
+            x=response_data['forecast_dates'], 
+            y=forecast,
+            mode='lines', name=f'{name} Forecast', line=dict(color=color, width=2.5), showlegend=(i==0)
+        ), row=1, col=col)
+
+    fig_subplots.update_layout(height=400, template="plotly_dark")
+    st.plotly_chart(fig_subplots, use_container_width=True)
+    # --- END OF NEW FEATURE ---
 
 else:
     st.info("Select a dataset and click 'Generate Forecast' to get started.")
