@@ -2,7 +2,9 @@ import streamlit as st
 import pandas as pd
 import requests
 import plotly.graph_objects as go
+import plotly.express as px
 import time
+import numpy as np
 
 # --- Page Configuration ---
 st.set_page_config(
@@ -60,15 +62,16 @@ uploaded_file = st.sidebar.file_uploader(
     help="Your CSV should have a date column and a value column."
 )
 
-# Forecast Horizon slider
+# --- FIX: Change slider to be month-wise ---
 forecast_horizon = st.sidebar.slider(
-    "Forecast Horizon (Days)", 
-    min_value=10, 
-    max_value=100, 
-    value=30, 
-    step=5,
-    help="How many days into the future do you want to forecast?"
+    "Forecast Horizon (Months)", 
+    min_value=3, 
+    max_value=36, 
+    value=12, 
+    step=3,
+    help="How many months into the future do you want to forecast?"
 )
+# --- END OF FIX ---
 
 
 if uploaded_file is not None:
@@ -106,67 +109,112 @@ if st.session_state['df'] is not None:
 if st.session_state['api_response']:
     response_data = st.session_state['api_response']
     
-    st.subheader("📊 Performance Metrics")
-    st.markdown("Lower is better for all error metrics.")
+    # --- SECTION 1: Performance Metrics ---
+    st.subheader("📊 Performance Metrics Comparison")
+    st.markdown("Metrics are calculated on the test set. Lower values are better.")
 
-    c1, c2, c3 = st.columns(3)
-    with c1:
-        st.subheader("Chronos (GenAI)")
-        chronos_metrics = response_data['chronos_forecast']['metrics']
-        st.metric(label="MAE", value=f"{chronos_metrics['mae']:.2f}")
-        st.metric(label="RMSE", value=f"{chronos_metrics['rmse']:.2f}")
-
-    with c2:
-        st.subheader("ARIMA")
-        arima_metrics = response_data['arima_forecast']['metrics']
-        st.metric(label="MAE", value=f"{arima_metrics['mae']:.2f}")
-        st.metric(label="RMSE", value=f"{arima_metrics['rmse']:.2f}")
+    metrics = {
+        'Chronos': response_data['chronos_forecast']['metrics'],
+        'ARIMA': response_data['arima_forecast']['metrics'],
+        'ETS': response_data['ets_forecast']['metrics']
+    }
     
-    with c3:
+    for model in metrics:
+        true = np.array(response_data['actual_values'])
+        pred = np.array(response_data[f'{model.lower()}_forecast']['forecast_values'])
+        metrics[model]['mape'] = np.mean(np.abs((true - pred) / np.where(true == 0, 1, true))) * 100
+
+    col1, col2, col3 = st.columns(3)
+    with col1:
+        st.subheader("Chronos (GenAI)")
+        st.metric(label="MAE", value=f"{metrics['Chronos']['mae']:.2f}")
+        st.metric(label="RMSE", value=f"{metrics['Chronos']['rmse']:.2f}")
+        st.metric(label="MAPE", value=f"{metrics['Chronos']['mape']:.2f}%")
+
+    with col2:
+        st.subheader("ARIMA")
+        st.metric(label="MAE", value=f"{metrics['ARIMA']['mae']:.2f}")
+        st.metric(label="RMSE", value=f"{metrics['ARIMA']['rmse']:.2f}")
+        st.metric(label="MAPE", value=f"{metrics['ARIMA']['mape']:.2f}%")
+    
+    with col3:
         st.subheader("ETS")
-        ets_metrics = response_data['ets_forecast']['metrics']
-        st.metric(label="MAE", value=f"{ets_metrics['mae']:.2f}")
-        st.metric(label="RMSE", value=f"{ets_metrics['rmse']:.2f}")
+        st.metric(label="MAE", value=f"{metrics['ETS']['mae']:.2f}")
+        st.metric(label="RMSE", value=f"{metrics['ETS']['rmse']:.2f}")
+        st.metric(label="MAPE", value=f"{metrics['ETS']['mape']:.2f}%")
         
+    # --- SECTION 2: Model Interpretation ---
+    st.subheader("💡 Model Interpretation")
+    st.info("""
+    **How to choose the best model for your use case:**
+
+    - **Lowest RMSE (Root Mean Square Error):** Choose this model if you want to minimize the risk of large, unexpected errors. It's the best choice for reliability and risk management.
+    - **Lowest MAE (Mean Absolute Error):** Choose this model if the business cost of an error is directly proportional to its size.
+    - **Lowest MAPE (Mean Absolute Percentage Error):** Choose this model if you need to communicate the forecast's accuracy in simple, relative terms. It's the most intuitive metric for business presentations.
+    """)
+
+    # --- SECTION 3: Forecast Visualization ---
     st.subheader("📈 Forecast Visualization")
     fig = go.Figure()
-    fig.add_trace(go.Scatter(x=response_data['historical_dates'], y=response_data['historical_values'], mode='lines', name='Historical Data', line=dict(color='royalblue')))
+
+    fig.add_trace(go.Scatter(
+        x=response_data['historical_dates'], 
+        y=response_data['historical_values'], 
+        mode='lines', 
+        name='Historical Data',
+        line=dict(color='royalblue', width=2)
+    ))
     
-    # --- VISUAL IMPROVEMENT 1: De-emphasize the actual values line ---
     fig.add_trace(go.Scatter(
         x=response_data['forecast_dates'], 
         y=response_data['actual_values'], 
         mode='lines', 
-        name='Actual Values (Holdout)', 
-        line=dict(color='grey', width=2, dash='dash') # Lighter, dashed line
+        name='Actual Values (Holdout)',
+        line=dict(color='grey', width=2, dash='dash')
     ))
-    # --- END OF IMPROVEMENT ---
     
-    # --- VISUAL IMPROVEMENT 2: Emphasize the forecast lines ---
     fig.add_trace(go.Scatter(
         x=response_data['forecast_dates'], 
-        y=response_data['arima_forecast']['forecast_values'], 
+        y=response_data['arima_forecast']['forecast_values'],
         mode='lines', 
         name='ARIMA Forecast', 
-        line=dict(color='orange', width=2.5) # Solid, thicker line
+        line=dict(color='orange', width=2.5)
     ))
+    
     fig.add_trace(go.Scatter(
         x=response_data['forecast_dates'], 
-        y=response_data['chronos_forecast']['forecast_values'], 
+        y=response_data['chronos_forecast']['forecast_values'],
         mode='lines', 
         name='Chronos Forecast', 
-        line=dict(color='lightgreen', width=2.5) # Solid, thicker line
+        line=dict(color='firebrick', width=2.5)
     ))
+    
     fig.add_trace(go.Scatter(
         x=response_data['forecast_dates'], 
-        y=response_data['ets_forecast']['forecast_values'], 
+        y=response_data['ets_forecast']['forecast_values'],
         mode='lines', 
         name='ETS Forecast', 
-        line=dict(color='cyan', width=2.5) # Solid, thicker line
+        line=dict(color='cyan', width=2.5)
     ))
-    # --- END OF IMPROVEMENT ---
+    
+    split_date = response_data['historical_dates'][-1]
+    fig.add_shape(
+        type="line", x0=split_date, y0=0, x1=split_date, y1=1,
+        yref="paper", line=dict(color="red", width=2, dash="dash")
+    )
+    fig.add_annotation(
+        x=split_date, y=1, yref="paper",
+        text="Train/Test Split", showarrow=False, yshift=10
+    )
 
-    fig.update_layout(title="Model Forecasts vs. Historical Data", xaxis_title="Date", yaxis_title="Value", legend_title="Series", height=600)
+    fig.update_layout(
+        title="Forecast vs. Actual Holdout Data", 
+        xaxis_title="Date", 
+        yaxis_title="Value", 
+        height=600, 
+        legend_title="Series",
+        template="plotly_dark"
+    )
     st.plotly_chart(fig, use_container_width=True)
 
 else:

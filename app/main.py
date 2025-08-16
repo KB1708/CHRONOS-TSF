@@ -30,9 +30,7 @@ async def create_forecast(
     file: UploadFile = File(...),
     date_col: str = Form(...),
     value_col: str = Form(...),
-    # --- FIX: Accept forecast_horizon from the frontend ---
     forecast_horizon: int = Form(...)
-    # --- END OF FIX ---
 ):
     """
     This endpoint receives a CSV file, column names, and a forecast horizon,
@@ -48,14 +46,12 @@ async def create_forecast(
         if date_col not in df.columns or value_col not in df.columns:
             raise HTTPException(status_code=400, detail=f"Provided column names not found. Ensure '{date_col}' and '{value_col}' are in the CSV.")
 
-        # --- FIX: Pass the horizon to the backend logic ---
         results = generate_all_forecasts_and_metrics(
             df, 
             date_col=date_col, 
             target_col=value_col, 
             forecast_horizon=forecast_horizon
         )
-        # --- END OF FIX ---
         
         return results
 
