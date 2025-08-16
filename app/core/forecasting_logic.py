@@ -20,10 +20,6 @@ def generate_all_forecasts_and_metrics(df: pd.DataFrame, date_col: str, target_c
     The main orchestration function using AutoGluon.
     It takes a dataframe and column names, runs models, and returns results.
     """
-    # --- ADDED DEBUGGING PRINT STATEMENT ---
-    print("\n\n>>> RUNNING CORRECTED BACKEND LOGIC (VERSION 3 - FINAL) <<<\n\n")
-    # --- END OF DEBUGGING STATEMENT ---
-
     # Use the column names provided by the user
     logger.info(f"Using '{date_col}' as date column and '{target_col}' as target column.")
     df = df[[date_col, target_col]].copy()
@@ -47,7 +43,9 @@ def generate_all_forecasts_and_metrics(df: pd.DataFrame, date_col: str, target_c
         raise ValueError(error_message)
     
     predictor_path = "./autogluon_models"
-    hyperparameters = {"Chronos": {}, "ARIMA": {}}
+    # --- FIX: Add ETS to the hyperparameters ---
+    hyperparameters = {"Chronos": {}, "ARIMA": {}, "ETS": {}}
+    # --- END OF FIX ---
 
     predictor = TimeSeriesPredictor(
         prediction_length=forecast_horizon,
@@ -71,11 +69,13 @@ def generate_all_forecasts_and_metrics(df: pd.DataFrame, date_col: str, target_c
 
     chronos_predictions = predictor.predict(train_data, model=chronos_model_name)
     arima_predictions = predictor.predict(train_data, model="ARIMA")
+    ets_predictions = predictor.predict(train_data, model="ETS") # Predict with ETS
     
     # Extract forecast dates and values
     forecast_dates_ts = chronos_predictions.index.get_level_values('timestamp')
     chronos_preds = chronos_predictions["mean"].values
     arima_preds = arima_predictions["mean"].values
+    ets_preds = ets_predictions["mean"].values # Get ETS values
 
     # Get the TRUE actual values from the holdout set
     true_values = test_data["Close"].values
@@ -83,6 +83,7 @@ def generate_all_forecasts_and_metrics(df: pd.DataFrame, date_col: str, target_c
     # Calculate metrics against the true values
     chronos_metrics = calculate_manual_metrics(true_values, chronos_preds)
     arima_metrics = calculate_manual_metrics(true_values, arima_preds)
+    ets_metrics = calculate_manual_metrics(true_values, ets_preds) # Calculate ETS metrics
     
     # Prepare the final response object
     response = {
@@ -97,7 +98,13 @@ def generate_all_forecasts_and_metrics(df: pd.DataFrame, date_col: str, target_c
         "arima_forecast": {
             "forecast_values": arima_preds.tolist(),
             "metrics": arima_metrics
+        },
+        # --- FIX: Add ETS results to the response ---
+        "ets_forecast": {
+            "forecast_values": ets_preds.tolist(),
+            "metrics": ets_metrics
         }
+        # --- END OF FIX ---
     }
     
     return response

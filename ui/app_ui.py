@@ -21,10 +21,8 @@ def call_forecast_api(df, date_col, value_col):
     """Sends a dataframe and column names to the backend API."""
     csv_buffer = df.to_csv(index=False).encode('utf-8')
     
-    # --- FIX: Send column names along with the file ---
     files = {'file': ('data.csv', csv_buffer, 'text/csv')}
     data = {'date_col': date_col, 'value_col': value_col}
-    # --- END OF FIX ---
     
     try:
         response = requests.post(API_URL, files=files, data=data, timeout=600)
@@ -74,14 +72,13 @@ elif st.sidebar.button("Load Sample Data"):
 
 # Main page for displaying results
 st.title("⏱️ Time Series Forecasting Comparison")
-st.markdown("Comparing **Amazon Chronos (Generative AI)** vs. **Traditional ARIMA**")
+st.markdown("Comparing **Amazon Chronos (GenAI)** vs. **Traditional Models (ARIMA, ETS)**")
 
 if st.session_state['df'] is not None:
     df = st.session_state['df']
     st.subheader("Data Preview & Configuration")
     st.dataframe(df.head())
 
-    # --- FIX: Let user select columns and pass them to the API ---
     col1, col2 = st.columns(2)
     with col1:
         date_col = st.selectbox("Select your Date Column:", df.columns)
@@ -94,13 +91,15 @@ if st.session_state['df'] is not None:
             st.session_state['api_response'] = call_forecast_api(df, date_col, value_col)
             end_time = time.time()
             st.info(f"Processing took {end_time - start_time:.2f} seconds.")
-    # --- END OF FIX ---
 
 if st.session_state['api_response']:
     response_data = st.session_state['api_response']
     
     st.subheader("📊 Performance Metrics")
-    c1, c2 = st.columns(2)
+    st.markdown("Lower is better for all error metrics.")
+
+    # --- FIX: Add a third column for ETS metrics ---
+    c1, c2, c3 = st.columns(3)
     with c1:
         st.subheader("Chronos (GenAI)")
         chronos_metrics = response_data['chronos_forecast']['metrics']
@@ -108,10 +107,17 @@ if st.session_state['api_response']:
         st.metric(label="RMSE", value=f"{chronos_metrics['rmse']:.2f}")
 
     with c2:
-        st.subheader("ARIMA (Traditional)")
+        st.subheader("ARIMA")
         arima_metrics = response_data['arima_forecast']['metrics']
         st.metric(label="MAE", value=f"{arima_metrics['mae']:.2f}")
         st.metric(label="RMSE", value=f"{arima_metrics['rmse']:.2f}")
+    
+    with c3:
+        st.subheader("ETS")
+        ets_metrics = response_data['ets_forecast']['metrics']
+        st.metric(label="MAE", value=f"{ets_metrics['mae']:.2f}")
+        st.metric(label="RMSE", value=f"{ets_metrics['rmse']:.2f}")
+    # --- END OF FIX ---
         
     st.subheader("📈 Forecast Visualization")
     fig = go.Figure()
@@ -119,6 +125,11 @@ if st.session_state['api_response']:
     fig.add_trace(go.Scatter(x=response_data['forecast_dates'], y=response_data['actual_values'], mode='lines', name='Actual Values (Holdout)', line=dict(color='black', width=3)))
     fig.add_trace(go.Scatter(x=response_data['forecast_dates'], y=response_data['arima_forecast']['forecast_values'], mode='lines', name='ARIMA Forecast', line=dict(color='orange', dash='dot')))
     fig.add_trace(go.Scatter(x=response_data['forecast_dates'], y=response_data['chronos_forecast']['forecast_values'], mode='lines', name='Chronos Forecast', line=dict(color='lightgreen', width=2, dash='dash')))
+    
+    # --- FIX: Add the ETS forecast to the plot ---
+    fig.add_trace(go.Scatter(x=response_data['forecast_dates'], y=response_data['ets_forecast']['forecast_values'], mode='lines', name='ETS Forecast', line=dict(color='mediumpurple', dash='longdash')))
+    # --- END OF FIX ---
+
     fig.update_layout(title="Model Forecasts vs. Historical Data", xaxis_title="Date", yaxis_title="Value", legend_title="Series", height=600)
     st.plotly_chart(fig, use_container_width=True)
 

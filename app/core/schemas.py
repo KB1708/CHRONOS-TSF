@@ -14,17 +14,16 @@ class ForecastResult(BaseModel):
 class ForecastResponse(BaseModel):
     """
     Defines the final structure of the entire API response.
-    This schema is the 'gatekeeper' for the data sent to the frontend.
     """
     historical_dates: List[str]
     historical_values: List[float]
     forecast_dates: List[str]
-    
-    # --- THIS IS THE FIX ---
-    # We must explicitly add the 'actual_values' field here.
     actual_values: List[float]
-    # --- END OF FIX ---
     
     chronos_forecast: ForecastResult
     arima_forecast: ForecastResult
+    
+    # --- FIX: Add the ets_forecast field ---
+    ets_forecast: ForecastResult
+    # --- END OF FIX ---
 
