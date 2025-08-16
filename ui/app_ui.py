@@ -71,7 +71,7 @@ def create_metrics_barchart(metrics_dict):
 
 # --- UI Layout ---
 
-st.sidebar.title("⚙️ Controls")
+st.sidebar.title("⚙️ Configure Your Analysis")
 st.sidebar.markdown("Select a dataset and click 'Generate Forecast' to see the results.")
 
 if 'api_response' not in st.session_state:
