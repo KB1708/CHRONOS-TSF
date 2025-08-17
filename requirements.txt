@@ -1,14 +1,7 @@
-# Backend
-fastapi
-uvicorn[standard]
-python-multipart
-
-# Frontend
 streamlit
-requests
-
-# Core ML & Data (using AutoGluon)
-autogluon.timeseries
-statsmodels
-scikit-learn
 pandas
+plotly
+yfinance
+autogluon.timeseries
+scikit-learn
+numpy
