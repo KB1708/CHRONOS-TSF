@@ -8,8 +8,8 @@ Platform Machine:   AMD64
 Platform Version:   10.0.26100
 CPU Count:          16
 GPU Count:          0
-Memory Avail:       4.58 GB / 15.21 GB (30.1%)
-Disk Space Avail:   224.29 GB / 476.50 GB (47.1%)
+Memory Avail:       5.21 GB / 15.21 GB (34.3%)
+Disk Space Avail:   222.78 GB / 476.50 GB (46.8%)
 ===================================================
 
 Fitting with arguments:
@@ -38,18 +38,18 @@ AutoGluon will gauge predictive performance using evaluation metric: 'MASE'
 	This metric's sign has been flipped to adhere to being higher_is_better. The metric score can be multiplied by -1 to get the metric value.
 ===================================================
 
-Starting training. Start time is 2025-08-16 12:20:39
+Starting training. Start time is 2025-08-16 13:05:15
 Models that will be trained: ['Chronos[autogluon__chronos-bolt-small]', 'ARIMA']
 Training timeseries model Chronos[autogluon__chronos-bolt-small]. 
 	-14.9093      = Validation score (-MASE)
-	3.90    s     = Training runtime
-	2.38    s     = Validation (prediction) runtime
+	21.14   s     = Training runtime
+	2.77    s     = Validation (prediction) runtime
 Training timeseries model ARIMA. 
 	-13.3000      = Validation score (-MASE)
 	0.03    s     = Training runtime
-	5.70    s     = Validation (prediction) runtime
+	7.66    s     = Validation (prediction) runtime
 Training complete. Models trained: ['Chronos[autogluon__chronos-bolt-small]', 'ARIMA']
-Total runtime: 12.04 s
+Total runtime: 31.80 s
 Best model: ARIMA
 Best model score: -13.3000
 data with frequency 'MS' has been resampled to frequency 'D'.
