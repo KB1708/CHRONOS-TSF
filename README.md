@@ -37,7 +37,7 @@ Follow these instructions to set up and run the project on your local machine.
 Open your terminal or command prompt and clone the project:
 
 
-git clone https://github.com/KB1708/CHRONOS-TSF.git
+git clone --branch shivadharshini  https://github.com/KB1708/CHRONOS-TSF.git
 
 cd CHRONOS-TSF
 
